@@ -1,11 +1,9 @@
 from typing import Optional, List
 
 import sqlite3
-from contextlib import contextmanager
 from datetime import datetime
 from dataclasses import dataclass, asdict
 
-from logger import log
 
 SQL_INIT_TABLE = (
     "CREATE TABLE IF NOT EXISTS Todo ("
@@ -31,18 +29,19 @@ class Todo:
 class Connector:
     DB_PATH = "todo.sqlite3"
 
-    @contextmanager
-    def connect(self):
-        conn = sqlite3.connect(self.DB_PATH)
-        try:
-            yield conn
-        except sqlite3.Error as err:
-            conn.rollback()
-            raise err
+    def __init__(self) -> None:
+        self.conn = sqlite3.connect(self.DB_PATH)
+
+    def __enter__(self) -> "Connector":
+        return self
+
+    def __exit__(self, *args) -> None:
+        if args[0]:
+            self.conn.rollback()
+            log("ERROR", f"{args}")
         else:
-            conn.commit()
-        finally:
-            conn.close()
+            self.conn.commit()
+        self.conn.close()
 
 
 class SQLBuilder:
@@ -97,33 +96,33 @@ class DBManager(Connector):
         sql = SQLBuilder.select_all("name")
         curr = self.conn.cursor()
         if curr.execute(sql, (name,)).fetchone():
-            log("WARNING", f"Todo(name={name}) already exists")
+            print(f"Todo(name={name}) already exists")
             return False
 
         sql = SQLBuilder.insert("checked", "name", "created_at")
         curr_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.conn.execute(sql, (checked, name, curr_date))
-        log("SUCCESS", f"Todo(name={name}) added")
+        print(f"Todo(name={name}) added")
         return True
 
     def delete(self, id) -> bool:
         if not self.get(id):
-            log("WARNING", f"Todo(id={id}) does not exists")
+            print(f"Todo(id={id}) does not exists")
             return False
 
         sql = SQLBuilder.drop("id")
         self.conn.execute(sql, (id,))
-        log("SUCCESS", f"Todo(id={id}) deleted")
+        print(f"Todo(id={id}) deleted")
         return True
 
     def update(self, id, checked) -> bool:
         if not self.get(id):
-            log("WARNING", f"Todo(id={id}) does not exists")
+            print(f"Todo(id={id}) does not exists")
             return False
 
         sql = SQLBuilder.update("checked", "id")
         self.conn.execute(sql, (checked, id))
-        log("SUCCESS", f"Todo(id={id}) updated")
+        print(f"Todo(id={id}) updated")
         return True
 
 
@@ -136,7 +135,5 @@ def db_handler(func):
 
 if __name__ == "__main__":
     with DBManager() as db:
-        # db.add("Физкультура")
-        # db.add("Помыть посуду, после обеда")
-        # db.add("Пройтись по магазинам, купить продукты")
+        # Create database
         pass
