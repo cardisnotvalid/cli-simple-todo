@@ -6,6 +6,9 @@ from database import db_handler
 @db_handler
 def print_db(db):
     todo_list = db.get_all()
+    if not todo_list:
+        print("Todo list is empty")
+        return
 
     max_id_length = max(map(lambda t: len(str(t.id)), todo_list))
     max_name_length = max(map(lambda t: len(t.name), todo_list))

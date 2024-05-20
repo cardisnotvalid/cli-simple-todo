@@ -38,7 +38,7 @@ class Connector:
     def __exit__(self, *args) -> None:
         if args[0]:
             self.conn.rollback()
-            log("ERROR", f"{args}")
+            print(f"ERROR: {args}")
         else:
             self.conn.commit()
         self.conn.close()
