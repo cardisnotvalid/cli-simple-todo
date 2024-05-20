@@ -1,7 +1,6 @@
 import argparse
 
-from logger import Color
-from db_manager import db_handler
+from database import db_handler
 
 
 @db_handler
@@ -12,10 +11,10 @@ def print_db(db):
     max_name_length = max(map(lambda t: len(t.name), todo_list))
 
     header_dict = {
-        Color.YELLOW + "#": max_id_length + 7,
+        "#": max_id_length,
         "☐": 1,
         "Name": max_name_length,
-        "Created" + Color.END: 19
+        "Created": 19
     }
 
     header_text = []
@@ -25,12 +24,11 @@ def print_db(db):
 
     body_text = []
     for t in todo_list:
-        t_checked = Color.GREEN if t.checked else Color.RED
-        t_checked += f"✓{Color.END}" if t.checked else f"𐄂{Color.END}"
+        t_checked = "✓" if t.checked else "𐄂"
 
         row_dict = {
             t.id: max_id_length,
-            t_checked: (12,),
+            t_checked: (1,),
             t.name: max_name_length,
             t.created_at: 19
         }
